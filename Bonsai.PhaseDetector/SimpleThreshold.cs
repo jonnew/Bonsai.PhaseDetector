@@ -11,9 +11,8 @@ using System.Collections.Generic;
 namespace Bonsai.PhaseDetector
 {
 
-    public class SimpleThreshold : Combinator<Mat, int>
+    public class SimpleThreshold : Combinator<Mat, double>
     {
-        private const double Tau = 2 * Math.PI;
 
         public int Channel { get; set; }    
 
@@ -21,11 +20,11 @@ namespace Bonsai.PhaseDetector
         
         public int TimeoutSamples { get; set; }
 
-
+        public double DelayMicroSeconds { get; set; }
 
         private int timeout;
 
-        public override IObservable<int> Process(IObservable<Mat> source)
+        public override IObservable<double> Process(IObservable<Mat> source)
         {
             timeout = 0;
 
@@ -54,7 +53,7 @@ namespace Bonsai.PhaseDetector
 
                 return false;
             })
-            .Select(m => 0);
+            .Select(m => DelayMicroSeconds);
 
         }         
     }

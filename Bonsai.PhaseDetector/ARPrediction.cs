@@ -4,12 +4,22 @@ using System.Collections.Generic;
 
 namespace Bonsai.PhaseDetector
 {
-
     public class ForwardARPrediction
     {
-        public ARPrediction.ARModel Model;
-        public int Sample0;
-        public double[] Prediction;
+        // The auto-regressive model fit to the data
+        public ARPrediction.ARModel Model { get; internal set; }
+
+        // The index of the first foward prediction in the Prediction vector
+        public int Sample0 { get; internal set; }
+
+        // The signal power of data used to create the Model
+        public double Power { get; internal set; }
+
+        // Sample period of prediction
+        public double Ts { get; internal set; }
+
+        // Data and forward prediction. Forward prediction starts at index Sample0
+        public double[] Prediction { get; internal set; }
     }
 
     public static class ARPrediction
@@ -21,6 +31,26 @@ namespace Bonsai.PhaseDetector
             //public double[] Reflection { get; set; } // Reflection coefficients
         }
 
+        private static double[] DeMean(IList<double> timeSeries)
+        {
+            if (timeSeries.Count == 0) throw new ArgumentException("Time series cannot be empty.", nameof(timeSeries));
+
+            var res = new double[timeSeries.Count];
+
+            // Remove mean
+            var mean = 0d;
+            foreach (var s in timeSeries) mean += s;
+
+            mean /= timeSeries.Count;
+
+            for (int i = 0; i < timeSeries.Count - 1; i++)
+                res[i] = timeSeries[i] - mean;
+
+            return res;
+        }
+
+        // TODO: This method causes an artifact where the correlation is reduced for greater lags simply
+        // because the amount of data that goes into the sum is reduced
         private static double[] AutoCorrelation(IList<double> timeSeries, int order) 
         {
             if (timeSeries.Count == 0) throw new ArgumentException("Time series cannot be empty.", nameof(timeSeries));
@@ -28,10 +58,14 @@ namespace Bonsai.PhaseDetector
             var r = new double[order + 1];
             var n = timeSeries.Count - 1;
 
+            // Autocovariance
             for (int i = 0; i <= order; i++) // Lags
             {
-                for(int j = 0; j <= n - i; j++)
-                    r[i] += timeSeries[j] * timeSeries[i + j];
+                // Adust for finite samples
+                //var w = (double)n / (n - i);
+
+                for (int j = 0; j <= n - i; j++)
+                    r[i] += timeSeries[j] * timeSeries[i + j]; // * w;
             }
 
             return r;
@@ -46,7 +80,6 @@ namespace Bonsai.PhaseDetector
 
             var m = r.Count - 1;
             var a = new double[m + 1];
-            //var k = new double[r.Count + 1];
 
             var e = r[0];
             a[0] = 1.0;
@@ -83,99 +116,32 @@ namespace Bonsai.PhaseDetector
 
         }
 
-
-        public static ForwardARPrediction Predict(IList<double> timeSeries, int order, int forwardSamples, int timeSeries0)
+        public static ForwardARPrediction Predict(IList<double> timeSeries, int order, int windowStart, int windowLength, int forwardSamples)
         {
-
-            var model = EstimateAR(AutoCorrelation(timeSeries, order));
+            var model = EstimateAR(AutoCorrelation(new ArraySegment<double>(DeMean(timeSeries), windowStart, windowLength), order));
             var m = model.Coefficients.Length - 1; // skip coeff 1.0
 
             var pred = new double[forwardSamples + timeSeries.Count];
-            for (int i = 0; i < timeSeries.Count; i++)
-                pred[i] = timeSeries[i];
 
-            for (int i = timeSeries.Count; i < pred.Length; i++)
+            var power = 0d;
+            var endIndex = windowStart + windowLength;
+
+            // Use the window for calculating signal power and filling in the first samples of the prediction
+            for (int i = windowStart; i < endIndex; i++)
+            {
+                power += Math.Pow(timeSeries[i], 2);
+                pred[i] = timeSeries[i];
+            }
+
+            // Energy -> power
+            power /= timeSeries.Count;
+
+            // Prediction starts at end of window
+            for (int i = endIndex; i < pred.Length; i++)
                 for (int j = 0; j < m; j++)
                     pred[i] -= model.Coefficients[j + 1] * pred[i - 1 - j];
 
-            return new ForwardARPrediction { Model = model, Sample0 = timeSeries0, Prediction = pred };
+            return new ForwardARPrediction { Model = model, Sample0 = timeSeries.Count - 1, Prediction = pred , Power = power };
         }
-
-
-        //public static double[] Predict(IList<double> timeSeries, int order, int forwardSteps)
-        //{
-
-        //    var model = EstimateAR(AutoCorrelation(timeSeries, order));
-        //    var m = model.Coefficients.Length - 1; // skip coeff 1.0
-
-        //    var pred = new double[forwardSteps + m];
-        //    for (int i = 0; i < m; i++)
-        //        pred[i] = timeSeries[timeSeries.Count - m + i];
-
-        //    for (int i = m; i < pred.Length; i++)
-        //        for (int j = 0; j < m; j++)
-        //            pred[i] -= model.Coefficients[j+1] * pred[i - 1 - j];
-
-        //    return pred;
-        //}
-
-
-        //public static ARModel EstimateAR(IList<double> r)
-        //{
-        //    // TODO: might need more than 1 element
-        //    if (r.Count == 0) throw new ArgumentException("Autocorrelation cannot be empty.", nameof(r));
-
-        //    var a = new double[r.Count + 1];
-        //    var k = new double[r.Count + 1];
-        //    var e = r[0];
-
-        //    for (int i = 1; i < r.Count; i++)
-        //    {
-
-        //        double v;
-
-        //        if (e == 0.0)
-        //            v = 0.0;
-        //        else
-        //        {
-        //            v = -r[i];
-        //            for (int j = 1; j < i; j++)
-        //                v -= a[j - 1] * r[i - j];
-        //            v /= e;
-
-        //            if (v > 1.0 || v < -1.0)
-        //            {
-        //                Console.Error.WriteLine("Unstable filter k[{0}]={1}", i, v);
-        //            }
-        //        }
-
-        //        k[i - 1] = v;
-
-        //        // Update prediction coefficients
-        //        var jmax = (i - 1) / 2;
-        //        for (int j = 1; j <= jmax; j++)
-        //        {
-        //            var tmp = a[j - 1];
-        //            a[j - 1] += v * a[(i - j) - 1];
-        //            a[(i - j) - 1] += v * tmp;
-        //        }
-
-        //        if ((i - 1) % 2 != 0)
-        //        {
-        //            a[i / 2 - 1] += v * a[i / 2 - 1];
-        //        }
-                   
-        //        a[i - 1] = v;
-        //        e *= (1.0 - v * v);
-        //    }
-
-        //    return new ARModel { 
-        //        Sigma = Math.Sqrt(e),
-        //        Coefficients = a,
-        //        Reflection  = k
-        //    };
-
-        //}
-
     }
 }
