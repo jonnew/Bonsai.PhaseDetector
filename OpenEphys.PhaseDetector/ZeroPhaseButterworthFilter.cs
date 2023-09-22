@@ -1,15 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Bonsai.Dsp;
 using OpenCV.Net;
-using System.Numerics;
-using System.Xml.Serialization;
 
-namespace Bonsai.PhaseDetector
+namespace OpenEphys.PhaseDetector
 {
     [Description("A zero-phase Butterworth bandpass filter.")]
     internal class ZeroPhaseButterworthFilter
@@ -30,7 +23,7 @@ namespace Bonsai.PhaseDetector
             // Pre-compute initial conditions
             N = A.Length - 1;
 
-            // K and Z do not change if A and B dont, so I think this should be optimized out as part of a constrcutor
+            // K and Z do not change if A and B don't, so these are precomputed in constructor
             var K = new double[N, N];
             var z = new double[N];
 
@@ -59,7 +52,7 @@ namespace Bonsai.PhaseDetector
             var IC = Mat.CreateMatHeader(z, N, 1, Depth.F64, 1);
 
             CV.Invert(KMat, KMat, InversionMethod.Svd);
-            CV.MatMul(KMat, IC, IC); // IC slightly different than matlab impl
+            CV.MatMul(KMat, IC, IC); // TODO: IC slightly different than matlab impl
 
             Z = new double[N];
             for (int i = 0; i < N; i++)

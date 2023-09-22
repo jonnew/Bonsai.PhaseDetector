@@ -3,9 +3,11 @@ using System.ComponentModel;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using OpenCV.Net;
+using Bonsai;
 
-namespace Bonsai.PhaseDetector
+namespace OpenEphys.PhaseDetector
 {
+    [Description("Zero-phase Butterworth filter. The vector is filtered in both the forward and reverse direction.")]
     public class ButterworthFiltFilt : Transform<Mat, Mat>
     {
         [Description("The sampling rate of data to be processed.")]

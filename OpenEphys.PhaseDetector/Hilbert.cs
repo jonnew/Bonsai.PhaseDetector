@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Linq;
 using System.Numerics;
 using OpenCV.Net;
-using System.Reactive.Linq;
 using FFTW.NET;
+using Bonsai;
 
-namespace Bonsai.PhaseDetector
+namespace OpenEphys.PhaseDetector
 {
     public struct AmpPhase
     {
@@ -37,11 +36,10 @@ namespace Bonsai.PhaseDetector
             var ts = new Complex[numel];
 
             for (int i = 0; i < ts.Length; i++)
-                ts[i] = timeSeries[i].Val0; // Math.Sin(i * 2 * Math.PI * 128 / input.Length);
+                ts[i] = timeSeries[i].Val0;
 
             return InstaneousAmplitudeAndPhase(ts);
         }
-
 
         internal static AmpPhase InstaneousAmplitudeAndPhase(Complex[] timeSeries)
         {

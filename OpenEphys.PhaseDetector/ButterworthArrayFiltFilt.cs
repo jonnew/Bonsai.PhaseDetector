@@ -1,17 +1,12 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reactive.Linq;
-using System.Runtime.InteropServices;
-using System.Threading;
-using OpenCV.Net;
+using Bonsai;
 
-namespace Bonsai.PhaseDetector
+namespace OpenEphys.PhaseDetector
 {
     public class ButterworthArrayFiltFilt : Transform<double[], double[]>
     {
-
         [Description("The sampling rate of data to be processed.")]
         [Range(0, 10e6)]
         public double SampleRate { get; set; } = 30193.236714975847;

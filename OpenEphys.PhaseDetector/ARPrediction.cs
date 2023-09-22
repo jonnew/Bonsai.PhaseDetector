@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Bonsai.PhaseDetector
+namespace OpenEphys.PhaseDetector
 {
     public class ForwardARPrediction
     {

@@ -4,7 +4,7 @@ using System.Numerics;
 
 // NB: Taken from Bonsai.Dsp.FilterDesign, which has a bunch of useful, but private functions. 
 // TODO: There appear to be issues with this code. Coefficients do not match matlab for various cuttoff and Fs parameters. Numerical instabilities etc?
-namespace Bonsai.PhaseDetector
+namespace OpenEphys.PhaseDetector
 {
     /// <summary>
     /// Specifies the type of digital pass filter to apply on a signal.
@@ -59,7 +59,7 @@ namespace Bonsai.PhaseDetector
 
             PoleZero prototype;
             prototype.Poles = poles;
-            prototype.Zeros = new Complex[0];
+            prototype.Zeros = Array.Empty<Complex>();
             prototype.Gain = 1;
             return prototype;
         }

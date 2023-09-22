@@ -2,13 +2,14 @@
 using System.ComponentModel;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
+using Bonsai;
 using OpenCV.Net;
 
-namespace Bonsai.PhaseDetector
+namespace OpenEphys.PhaseDetector
 {
     public class ARPredict : Transform<Mat, ForwardARPrediction>
     {
-        [Description("Autoregressive model order.")]
+        [Description("Autoregressive model order (number of lags). This applies to decimated data.")]
         [Range(2, int.MaxValue)]
         public int Order { get; set; } = 10;
 
@@ -20,7 +21,7 @@ namespace Bonsai.PhaseDetector
             "forward prediction should end at most recent sample. 2.0 indicates that " +
             "prediction should extend to 2x length of the data window.")]
         [Range(1.0, 10)]
-        public double ForwardWindow { get; set; } = 0.75;
+        public double ForwardWindow { get; set; } = 2.0;
 
         [Description("The sampling rate of data to be processed.")]
         [Range(0, 10e6)]
@@ -39,7 +40,6 @@ namespace Bonsai.PhaseDetector
 
             return source.Select(m =>
             {
-
                 if ((m.Cols > 1 && m.Rows > 1) || m.Depth != Depth.F64)
                 {
                     throw new WorkflowRuntimeException("This node can only process a 1D vector of doubles.");

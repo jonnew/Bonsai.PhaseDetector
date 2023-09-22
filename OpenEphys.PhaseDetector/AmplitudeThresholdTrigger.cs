@@ -10,10 +10,8 @@ using System.Collections.Generic;
 
 namespace Bonsai.PhaseDetector
 {
-
-    public class SimpleThreshold : Combinator<Mat, double>
+    public class AmplitudeThresholdTrigger : Combinator<Mat, double>
     {
-
         public int Channel { get; set; }    
 
         public int Threshold { get; set; }  
