@@ -1,5 +1,4 @@
-﻿using OpenCV.Net;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace OpenEphys.PhaseDetector

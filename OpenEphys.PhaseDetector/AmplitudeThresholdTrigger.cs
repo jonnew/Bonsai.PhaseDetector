@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Linq;
-using System.Numerics;
 using OpenCV.Net;
 using System.Reactive.Linq;
-using FFTW.NET;
-using System.ComponentModel;
-using System.Drawing.Design;
-using System.Collections.Generic;
+using Bonsai;
 
-namespace Bonsai.PhaseDetector
+namespace OpenEphys.PhaseDetector
 {
     public class AmplitudeThresholdTrigger : Combinator<Mat, double>
     {
